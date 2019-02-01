@@ -22,10 +22,12 @@
 --]]
 
 require("lib.cmwc")
-require("lib.maze")
+--require("lib.maze")
+require("lib.maze_mrvn")
 
 function calculateMazePosition(config, modSurfaceInfo, coordinates)
-
+   -- MRVN
+   if false then
     local topX
     local topY
 
@@ -48,6 +50,11 @@ function calculateMazePosition(config, modSurfaceInfo, coordinates)
     end
 
     return {x = mazeX, y = mazeY}
+   else
+      local mazeX = math.floor(coordinates.x / config.mazeBlockSize + 0.5)
+      local mazeY = math.floor(coordinates.y / config.mazeBlockSize + 0.5)
+      return {x = mazeX, y = mazeY}
+   end
 end
 
 local function calculateChunkPositionFromMazeCoordinates(config, modSurfaceInfo, mazeCoordinates)
@@ -147,7 +154,10 @@ local function calculateResource(config, surface, modSurfaceInfo, x, y)
 end
 
 function resourceAt(config, surface, modSurfaceInfo, coordinates)
-
+    -- MRVN
+    if true then
+       return nil
+    end
     while coordinates.y > modSurfaceInfo.resourceGridCalculatedTo do
         for x = 1, modSurfaceInfo.maze.numColumns do
             calculateResource(config, surface, modSurfaceInfo, x, modSurfaceInfo.resourceGridCalculatedTo + 1)
@@ -195,6 +205,7 @@ local function initModSurfaceInfo(config, surface, modSurfaceInfo)
 
     modSurfaceInfo.mazeInfo = {}
 
+--[[
     local width
 
     -- swap X/Y for the purposes of maze position calculation, depending upon which direction is larger
@@ -234,6 +245,9 @@ local function initModSurfaceInfo(config, surface, modSurfaceInfo)
     local mazeRng = Cmwc.deriveNew(modSurfaceInfo.masterRng)
 
     modSurfaceInfo.maze = Maze.new(mazeRng, chunks, 0.5, config.resourceMatrixMax, config.loopChance, config.clearingChance, config.clearingSizeMax)
+]]--
+    modSurfaceInfo.mapOffset = 0
+    modSurfaceInfo.maze = Maze.new()
 
     modSurfaceInfo.resourceGrid = {}
     modSurfaceInfo.resourceGridCalculatedTo = 0
@@ -249,16 +263,16 @@ local function initModSurfaceInfo(config, surface, modSurfaceInfo)
         local mangroveRng = Cmwc.deriveNew(modSurfaceInfo.masterRng)
         modSurfaceInfo.terraformingMangroveRng = Cmwc.deriveNew(mangroveRng)
         modSurfaceInfo.firstMazeRowMangroveRng = {}
-        for i = 1,chunks do
-            table.insert(modSurfaceInfo.firstMazeRowMangroveRng, Cmwc.deriveNew(mangroveRng))
-        end
+        -- MRVN: for i = 1,chunks do
+        -- MRVN:     table.insert(modSurfaceInfo.firstMazeRowMangroveRng, Cmwc.deriveNew(mangroveRng))
+        -- MRVN: end
     end
 
     modSurfaceInfo.firstResource = {}
 
-    for k,v in pairs(config.ensureResources) do
-        ensureResource(config, surface, modSurfaceInfo, chunks, v.maxY, v.fallbackY, k)
-    end
+    -- MRVN: for k,v in pairs(config.ensureResources) do
+    -- MRVN:     ensureResource(config, surface, modSurfaceInfo, chunks, v.maxY, v.fallbackY, k)
+    -- MRVN: end
 
     modSurfaceInfo.initComplete = true
 end
@@ -451,7 +465,8 @@ function ribbonMazeGenerateResources(config, modSurfaceInfo, surface, chunkPosit
 end
 
 function isOutOfMap(modSurfaceInfo, mazePosition)
-    return mazePosition.y < 0 or mazePosition.x < 0 or mazePosition.x > modSurfaceInfo.maze.numColumns+1
+    -- return mazePosition.y < 0 or mazePosition.x < 0 or mazePosition.x > modSurfaceInfo.maze.numColumns+1
+    return false
 end
 
 function generateMangroves(modSurfaceInfo, surface, chunkTilePosition, rng, config)
@@ -502,6 +517,13 @@ function generateMangroves(modSurfaceInfo, surface, chunkTilePosition, rng, conf
     end
 end
 
+function rotate_n(entity, count)
+   while count > 0 do
+      entity.rotate{}
+      count = count - 1
+   end
+end
+
 function ribbonMazeChunkGeneratedEventHandler(event)
 
     local config = ribbonMazeConfig()
@@ -543,8 +565,9 @@ function ribbonMazeChunkGeneratedEventHandler(event)
     end
 
     local inClearMazeArea = isInClearMazeArea(config, modSurfaceInfo, x, y)
+    --[[
     local isWaterRow = y < 1
-
+    
     if isWaterRow then
         -- and the fish
         local fish_per_chunk = 10
@@ -556,22 +579,75 @@ function ribbonMazeChunkGeneratedEventHandler(event)
             surface.create_entity{name=fish_name, position={tileX,tileY}}
         end
     end
+    ]]--
 
-    if (isWaterRow or not inClearMazeArea) and Maze.wallTileAt(modSurfaceInfo.maze, x, y) then
-        local updatedTiles = {}
-        local tileName
-        if isWaterRow and (inClearMazeArea or not Maze.wallTileAt(modSurfaceInfo.maze, x, y+1)) then
-            tileName = config.waterTile
-        else
-            tileName = config.mazeWallTile
-        end
-
-        for tileX = chunkTilePosition.x, chunkTilePosition.x+31 do
-            for tileY = chunkTilePosition.y, chunkTilePosition.y+31 do
-                table.insert(updatedTiles, {name = tileName, position = {tileX, tileY}})
+    -- water is a resource so replace natural occuring lakes
+    local waterTiles = {}
+    for tileX = chunkTilePosition.x, chunkTilePosition.x+31 do
+        for tileY = chunkTilePosition.y, chunkTilePosition.y+31 do
+            local tile = surface.get_tile(tileX, tileY)
+            local replacement = config.waterTileReplacement[tile.name]
+            if replacement then
+                table.insert(waterTiles, {name = replacement, position = {tileX, tileY}})
+            else
+                table.insert(waterTiles, {name = "red-desert-0", position = {tileX, tileY}})
             end
         end
-        surface.set_tiles(updatedTiles)
+    end
+    surface.set_tiles(waterTiles)
+
+    -- generate walls
+    local walls = {}
+    for dx = -1, 1 do
+       for dy = -1, 1 do
+          walls[dx .. "_" .. dy] = Maze.wallTileAt(modSurfaceInfo.maze, x + dx, y + dy)
+       end
+    end
+    if walls[0 .. "_" .. 0] then
+       -- fill in mazeWallTiles
+       -- center
+       local wallTiles = {}
+       for tileX = chunkTilePosition.x + 8, chunkTilePosition.x + 23 do
+          for tileY = chunkTilePosition.y + 8, chunkTilePosition.y + 23 do
+             table.insert(wallTiles, {name = config.mazeWallTile, position = {tileX, tileY}})
+          end
+       end
+       -- left
+       if walls[-1 .. "_" .. 0] then
+          for tileX = chunkTilePosition.x + 0, chunkTilePosition.x + 7 do
+             for tileY = chunkTilePosition.y + 8, chunkTilePosition.y + 23 do
+                table.insert(wallTiles, {name = config.mazeWallTile, position = {tileX, tileY}})
+             end
+          end
+       end
+       -- right
+       if walls[1 .. "_" .. 0] then
+          for tileX = chunkTilePosition.x + 24, chunkTilePosition.x + 31 do
+             for tileY = chunkTilePosition.y + 8, chunkTilePosition.y + 23 do
+                table.insert(wallTiles, {name = config.mazeWallTile, position = {tileX, tileY}})
+             end
+          end
+       end
+       -- top
+       if walls[0 .. "_" .. -1] then
+          for tileX = chunkTilePosition.x + 8, chunkTilePosition.x + 23 do
+             for tileY = chunkTilePosition.y + 0, chunkTilePosition.y + 7 do
+                table.insert(wallTiles, {name = config.mazeWallTile, position = {tileX, tileY}})
+             end
+          end
+       end
+       -- bottom
+       if walls[0 .. "_" .. 1] then
+          for tileX = chunkTilePosition.x + 8, chunkTilePosition.x + 23 do
+             for tileY = chunkTilePosition.y + 24, chunkTilePosition.y + 31 do
+                table.insert(wallTiles, {name = config.mazeWallTile, position = {tileX, tileY}})
+             end
+          end
+       end
+       surface.set_tiles(wallTiles)
+
+       --[[
+            tileName = config.waterTile
 
         if tileName == config.waterTile and
                 isFirstMazeWaterRowEdge(config, modSurfaceInfo, chunkTilePosition) and
@@ -586,25 +662,142 @@ function ribbonMazeChunkGeneratedEventHandler(event)
                 end
             end
         end
+        ]]--
 
-        return
+       -- generate cliffs
+       -- straight walls
+       if not walls[-1 .. "_" .. 0] then
+          -- vertical wall on the left
+          local wx = chunkTilePosition.x + 4
+          local wy_min = chunkTilePosition.y + 8
+          local wy_max = chunkTilePosition.y + 23
+          if walls[0 .. "_" .. -1 ] then
+             -- comes from the top
+             wy_min = chunkTilePosition.y
+          end
+          if walls[0 .. "_" .. 1 ] then
+             -- goes to the bottom
+             wy_max = chunkTilePosition.y + 31
+          end
+          for wy = wy_min, wy_max, 4 do
+             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             rotate_n(cliff, 1)
+          end
+       end
+       if not walls[1 .. "_" .. 0] then
+          -- vertical wall on the right
+          local wx = chunkTilePosition.x + 24
+          local wy_min = chunkTilePosition.y + 8
+          local wy_max = chunkTilePosition.y + 23
+          if walls[0 .. "_" .. -1 ] then
+             -- comes from the top
+             wy_min = chunkTilePosition.y
+          end
+          if walls[0 .. "_" .. 1 ] then
+             -- goes to the bottom
+             wy_max = chunkTilePosition.y + 31
+          end
+          for wy = wy_min, wy_max do
+             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             rotate_n(cliff, 3)
+          end
+       end
+       if not walls[0 .. "_" .. -1] then
+          -- vertical wall on the top
+          local wx_min = chunkTilePosition.x + 8
+          local wx_max = chunkTilePosition.x + 23
+          local wy = chunkTilePosition.y + 4
+          if walls[-1 .. "_" .. 0 ] then
+             -- comes from the left
+             wx_min = chunkTilePosition.x
+          end
+          if walls[1 .. "_" .. 0 ] then
+             -- goes to the right
+             wx_max = chunkTilePosition.x + 31
+          end
+          for wx = wx_min, wx_max do
+             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             rotate_n(cliff, 2)
+          end
+       end
+       if not walls[0 .. "_" .. 1] then
+          -- vertical wall on the bottom
+          local wx_min = chunkTilePosition.x + 8
+          local wx_max = chunkTilePosition.x + 23
+          local wy = chunkTilePosition.y + 24
+          if walls[-1 .. "_" .. 0 ] then
+             -- comes from the left
+             wx_min = chunkTilePosition.x
+          end
+          if walls[1 .. "_" .. 0 ] then
+             -- goes to the right
+             wx_max = chunkTilePosition.x + 31
+          end
+          for wx = wx_min, wx_max do
+             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             rotate_n(cliff, 0)
+          end
+       end
+       -- small corners
+       if not walls[-1 .. "_" .. 0] and not walls[0 .. "_" .. -1] then
+          -- top left
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 6)
+       end
+       if not walls[1 .. "_" .. 0] and not walls[0 .. "_" .. -1] then
+          -- top right
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 7)
+       end
+       if not walls[1 .. "_" .. 0] and not walls[0 .. "_" .. 1] then
+          -- bottom right
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 4)
+       end
+       if not walls[-1 .. "_" .. 0] and not walls[0 .. "_" .. 1] then
+          -- bottom left
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 5)
+       end
+       -- large corners
+       if not walls[-1 .. "_" .. -1] and walls[-1 .. "_" .. 0] and walls[0 .. "_" .. -1] then
+          -- top left
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 2)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y}, direction=defines.direction.north}
+          rotate_n(cliff, 1)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 9)
+       end
+       if not walls[1 .. "_" .. -1] and walls[1 .. "_" .. 0] and walls[0 .. "_" .. -1] then
+          -- top right
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 2)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y}, direction=defines.direction.north}
+          rotate_n(cliff, 3)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          rotate_n(cliff, 10)
+       end
+       if not walls[-1 .. "_" .. 1] and walls[-1 .. "_" .. 0] and walls[0 .. "_" .. 1] then
+          -- bottom left
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 0)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 28}, direction=defines.direction.north}
+          rotate_n(cliff, 1)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 8)
+       end
+       if not walls[1 .. "_" .. 1] and walls[1 .. "_" .. 0] and walls[0 .. "_" .. 1] then
+          -- bottom right
+          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 0)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 28}, direction=defines.direction.north}
+          rotate_n(cliff, 3)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          rotate_n(cliff, 11)
+          surface.create_entity{name="wooden-chest", position={chunkTilePosition.x + 28, chunkTilePosition.y + 28}, direction=defines.direction.north}
+       end
     end
-
-    local updatedTiles = {}
-
-    for tileX = chunkTilePosition.x, chunkTilePosition.x+31 do
-        for tileY = chunkTilePosition.y, chunkTilePosition.y+31 do
-            local tile = surface.get_tile(tileX, tileY)
-            local replacement = config.waterTileReplacement[tile.name]
-            if replacement then
-                table.insert(updatedTiles, {name = replacement, position = {tileX, tileY}})
-            elseif tile.name == 'out-of-map' then
-                table.insert(updatedTiles, {name = "red-desert-0", position = {tileX, tileY}})
-            end
-        end
-    end
-
-    surface.set_tiles(updatedTiles)
 
     if inClearMazeArea then
         return
@@ -655,6 +848,11 @@ local function resourceScanning(research, resourceName)
         maxY = 32
     end
 
+    -- MRVN
+    if true then
+       return
+    end
+    
     local force = research.force
     for _,surfaceName in pairs(config.modSurfaces) do
         local surface = game.surfaces[surfaceName]
