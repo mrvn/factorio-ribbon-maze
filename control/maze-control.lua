@@ -665,12 +665,13 @@ function ribbonMazeChunkGeneratedEventHandler(event)
         ]]--
 
        -- generate cliffs
+       local cliff
        -- straight walls
        if not walls[-1 .. "_" .. 0] then
           -- vertical wall on the left
-          local wx = chunkTilePosition.x + 4
-          local wy_min = chunkTilePosition.y + 8
-          local wy_max = chunkTilePosition.y + 23
+          local wx = chunkTilePosition.x + 0
+          local wy_min = chunkTilePosition.y + 4
+          local wy_max = chunkTilePosition.y + 27
           if walls[0 .. "_" .. -1 ] then
              -- comes from the top
              wy_min = chunkTilePosition.y
@@ -686,9 +687,9 @@ function ribbonMazeChunkGeneratedEventHandler(event)
        end
        if not walls[1 .. "_" .. 0] then
           -- vertical wall on the right
-          local wx = chunkTilePosition.x + 24
-          local wy_min = chunkTilePosition.y + 8
-          local wy_max = chunkTilePosition.y + 23
+          local wx = chunkTilePosition.x + 28
+          local wy_min = chunkTilePosition.y + 4
+          local wy_max = chunkTilePosition.y + 27
           if walls[0 .. "_" .. -1 ] then
              -- comes from the top
              wy_min = chunkTilePosition.y
@@ -698,15 +699,15 @@ function ribbonMazeChunkGeneratedEventHandler(event)
              wy_max = chunkTilePosition.y + 31
           end
           for wy = wy_min, wy_max do
-             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
              rotate_n(cliff, 3)
           end
        end
        if not walls[0 .. "_" .. -1] then
           -- vertical wall on the top
-          local wx_min = chunkTilePosition.x + 8
-          local wx_max = chunkTilePosition.x + 23
-          local wy = chunkTilePosition.y + 4
+          local wx_min = chunkTilePosition.x + 4
+          local wx_max = chunkTilePosition.x + 27
+          local wy = chunkTilePosition.y + 0
           if walls[-1 .. "_" .. 0 ] then
              -- comes from the left
              wx_min = chunkTilePosition.x
@@ -716,15 +717,15 @@ function ribbonMazeChunkGeneratedEventHandler(event)
              wx_max = chunkTilePosition.x + 31
           end
           for wx = wx_min, wx_max do
-             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
              rotate_n(cliff, 2)
           end
        end
        if not walls[0 .. "_" .. 1] then
           -- vertical wall on the bottom
-          local wx_min = chunkTilePosition.x + 8
-          local wx_max = chunkTilePosition.x + 23
-          local wy = chunkTilePosition.y + 24
+          local wx_min = chunkTilePosition.x + 4
+          local wx_max = chunkTilePosition.x + 27
+          local wy = chunkTilePosition.y + 28
           if walls[-1 .. "_" .. 0 ] then
              -- comes from the left
              wx_min = chunkTilePosition.x
@@ -734,68 +735,67 @@ function ribbonMazeChunkGeneratedEventHandler(event)
              wx_max = chunkTilePosition.x + 31
           end
           for wx = wx_min, wx_max do
-             local cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
+             cliff = surface.create_entity{name="cliff", position={wx, wy}, direction=defines.direction.north}
              rotate_n(cliff, 0)
           end
        end
        -- small corners
        if not walls[-1 .. "_" .. 0] and not walls[0 .. "_" .. -1] then
           -- top left
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 0, chunkTilePosition.y + 0}, direction=defines.direction.north}
           rotate_n(cliff, 6)
        end
        if not walls[1 .. "_" .. 0] and not walls[0 .. "_" .. -1] then
           -- top right
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 0}, direction=defines.direction.north}
           rotate_n(cliff, 7)
        end
        if not walls[1 .. "_" .. 0] and not walls[0 .. "_" .. 1] then
           -- bottom right
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 28}, direction=defines.direction.north}
           rotate_n(cliff, 4)
        end
        if not walls[-1 .. "_" .. 0] and not walls[0 .. "_" .. 1] then
           -- bottom left
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 0, chunkTilePosition.y + 28}, direction=defines.direction.north}
           rotate_n(cliff, 5)
        end
        -- large corners
        if not walls[-1 .. "_" .. -1] and walls[-1 .. "_" .. 0] and walls[0 .. "_" .. -1] then
           -- top left
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 4}, direction=defines.direction.north}
-          rotate_n(cliff, 2)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y}, direction=defines.direction.north}
-          rotate_n(cliff, 1)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          --rotate_n(cliff, 2)
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y}, direction=defines.direction.north}
+          --rotate_n(cliff, 1)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 0, chunkTilePosition.y + 0}, direction=defines.direction.north}
           rotate_n(cliff, 9)
        end
        if not walls[1 .. "_" .. -1] and walls[1 .. "_" .. 0] and walls[0 .. "_" .. -1] then
           -- top right
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 4}, direction=defines.direction.north}
-          rotate_n(cliff, 2)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y}, direction=defines.direction.north}
-          rotate_n(cliff, 3)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 4}, direction=defines.direction.north}
+          --rotate_n(cliff, 2)
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y}, direction=defines.direction.north}
+          --rotate_n(cliff, 3)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 0}, direction=defines.direction.north}
           rotate_n(cliff, 10)
        end
        if not walls[-1 .. "_" .. 1] and walls[-1 .. "_" .. 0] and walls[0 .. "_" .. 1] then
           -- bottom left
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 24}, direction=defines.direction.north}
-          rotate_n(cliff, 0)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 28}, direction=defines.direction.north}
-          rotate_n(cliff, 1)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          --rotate_n(cliff, 0)
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 4, chunkTilePosition.y + 28}, direction=defines.direction.north}
+          --rotate_n(cliff, 1)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 0, chunkTilePosition.y + 28}, direction=defines.direction.north}
           rotate_n(cliff, 8)
        end
        if not walls[1 .. "_" .. 1] and walls[1 .. "_" .. 0] and walls[0 .. "_" .. 1] then
           -- bottom right
-          local cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 24}, direction=defines.direction.north}
-          rotate_n(cliff, 0)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 28}, direction=defines.direction.north}
-          rotate_n(cliff, 3)
-          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 24}, direction=defines.direction.north}
+          --rotate_n(cliff, 0)
+          --cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 24, chunkTilePosition.y + 28}, direction=defines.direction.north}
+          --rotate_n(cliff, 3)
+          cliff = surface.create_entity{name="cliff", position={chunkTilePosition.x + 28, chunkTilePosition.y + 28}, direction=defines.direction.north}
           rotate_n(cliff, 11)
-          surface.create_entity{name="wooden-chest", position={chunkTilePosition.x + 28, chunkTilePosition.y + 28}, direction=defines.direction.north}
        end
     end
 
