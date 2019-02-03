@@ -156,7 +156,7 @@ end
 function resourceAt(config, surface, modSurfaceInfo, coordinates)
     -- MRVN
     if true then
-       return nil
+       return Maze.resourceAt(modSurfaceInfo.maze, coordinates.x, coordinates.y)
     end
     while coordinates.y > modSurfaceInfo.resourceGridCalculatedTo do
         for x = 1, modSurfaceInfo.maze.numColumns do
@@ -343,8 +343,8 @@ function ribbonMazeGenerateResources(config, modSurfaceInfo, surface, chunkPosit
         if resourceName == "water_" then
             local updatedTiles = {}
 
-            for tileX = chunkPosition.x, chunkPosition.x+32 do
-                for tileY = chunkPosition.y, chunkPosition.y+32 do
+            for tileX = chunkPosition.x + 1, chunkPosition.x+30 do
+                for tileY = chunkPosition.y + 1, chunkPosition.y+30 do
                     local tile = surface.get_tile(tileX, tileY)
                     local replacement = config.waterTile
                     if replacement then
@@ -356,8 +356,8 @@ function ribbonMazeGenerateResources(config, modSurfaceInfo, surface, chunkPosit
             surface.set_tiles(updatedTiles)
 
             -- the mangroves
-            for tileY = chunkPosition.y, chunkPosition.y+31 do
-                for tileX = chunkPosition.x, chunkPosition.x+31 do
+            for tileY = chunkPosition.y + 2, chunkPosition.y + 29 do
+                for tileX = chunkPosition.x + 2, chunkPosition.x + 29 do
                     local randMangrove = Cmwc.randFraction(resource.rng)
                     if randMangrove <= config.mangroveDensity then
                         if config.mangroveGreenRawRatio == 1 or randMangrove <= (config.mangroveDensity * config.mangroveGreenRawRatio) then
@@ -373,8 +373,8 @@ function ribbonMazeGenerateResources(config, modSurfaceInfo, surface, chunkPosit
             local fish_per_chunk = 10
             for i = 0,fish_per_chunk do
                 local fish_name = config.fishList[Cmwc.randRange(resource.rng, 1, #(config.fishList))]
-                local tileX = chunkPosition.x + Cmwc.randRange(resource.rng, 1, 31)
-                local tileY = chunkPosition.y + Cmwc.randRange(resource.rng, 1, 31)
+                local tileX = chunkPosition.x + Cmwc.randRange(resource.rng, 1, 30)
+                local tileY = chunkPosition.y + Cmwc.randRange(resource.rng, 1, 30)
                 surface.create_entity{name=fish_name, position={tileX,tileY}}
             end
             return
@@ -799,9 +799,9 @@ function ribbonMazeChunkGeneratedEventHandler(event)
        end
     end
 
-    if inClearMazeArea then
-        return
-    end
+    --if inClearMazeArea then
+    --    return
+    --end
 
     ribbonMazeGenerateResources(config, modSurfaceInfo, surface, chunkTilePosition, mazePosition)
 end
@@ -843,9 +843,9 @@ local function resourceScanning(research, resourceName)
     local config = ribbonMazeConfig()
     local maxY
     if config.ensureResources[resourceName] then
-        maxY = config.ensureResources[resourceName].maxY
+        r = config.ensureResources[resourceName].maxY / 2
     else
-        maxY = 32
+        r = 32 / 2
     end
 
     -- MRVN
@@ -859,8 +859,8 @@ local function resourceScanning(research, resourceName)
         if surface then
             local modSurfaceInfo = global.modSurfaceInfo[surfaceName]
             if modSurfaceInfo then
-                for findY = 1, maxY, 2 do
-                    for findX = 1, modSurfaceInfo.maze.numColumns, 2 do
+                for findY = -r, r, 2 do
+                    for findX = -r, r, 2 do
                         local coordinates = {x=findX, y=findY}
                         local resource = resourceAt(config, surface, modSurfaceInfo, coordinates)
                         if resource and resource.resourceName == resourceName then
